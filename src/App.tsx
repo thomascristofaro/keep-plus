@@ -2,14 +2,22 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Card from './components/Card/index.ts';
 import Sidebar from './components/Sidebar/index.ts';
 import AddCardModal from './components/AddCardModal/index.ts';
-import { initialCards } from './data/initialData.ts';
+import { useCardStorage } from './hooks/useCardStorage.ts';
 import type { Card as CardType } from './types/index.ts';
 
 /**
  * Main App component that manages state and renders the application
  */
 const App: React.FC = () => {
-    const [cards, setCards] = useState<CardType[]>(initialCards);
+    const {
+        cards,
+        loading: storageLoading,
+        error: storageError,
+        initialized,
+        addCard,
+        clearError
+    } = useCardStorage();
+    
     const [isDark, setIsDark] = useState<boolean>(true);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [activeTag, setActiveTag] = useState<string>('');
@@ -26,6 +34,16 @@ const App: React.FC = () => {
         }
     }, [isDark]);
 
+    // Clear storage errors when they're displayed
+    useEffect(() => {
+        if (storageError) {
+            const timer = setTimeout(() => {
+                clearError();
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [storageError, clearError]);
+
     // Filter cards based on search term and active tag
     const filteredCards = useMemo(() => {
         return cards.filter((card: CardType) => {
@@ -40,10 +58,51 @@ const App: React.FC = () => {
         });
     }, [cards, searchTerm, activeTag]);
 
-    // Add a new card to the list
-    const handleAddCard = (newCard: CardType): void => {
-        setCards((prev: CardType[]) => [newCard, ...prev]);
+    // Add a new card to the storage
+    const handleAddCard = async (newCard: CardType): Promise<void> => {
+        // Extract only the fields needed for storage (exclude id and created_at)
+        const { id, created_at, ...cardData } = newCard;
+        const success = await addCard(cardData);
+        if (success) {
+            setShowAddModal(false);
+        }
+        // Error handling is managed by the hook and displayed in the UI
     };
+
+    // Show loading state while storage is initializing
+    if (!initialized && storageLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Initializing storage...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state if storage failed to initialize
+    if (!initialized && storageError) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+                <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md">
+                    <div className="text-red-500 mb-4">
+                        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Storage Error</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">{storageError}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                    >
+                        Reload App
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -118,6 +177,28 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </header>
+
+                {/* Error Toast - Show runtime storage errors */}
+                {initialized && storageError && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 mx-4 mt-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="text-red-700 dark:text-red-200 text-sm">{storageError}</p>
+                            </div>
+                            <button
+                                onClick={clearError}
+                                className="text-red-400 hover:text-red-600 dark:hover:text-red-200"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Cards Grid */}
                 <main className="flex-1 overflow-y-auto p-6">
