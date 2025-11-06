@@ -9,7 +9,6 @@ export interface Card {
   url: string;
   type: 'link' | 'image';
   tags: string[];
-  favicon?: string;
   created_at: string;
 }
 
