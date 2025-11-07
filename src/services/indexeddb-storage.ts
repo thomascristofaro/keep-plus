@@ -10,7 +10,7 @@ export class IndexedDBCardStorage implements ICardStorage {
     private readonly dbVersion: number;
     private readonly storeName = 'cards';
 
-    constructor(dbName = 'KeepPlusDB', dbVersion = 1) {
+    constructor(dbName = 'KeepPlusDB', dbVersion = 2) {
         this.dbName = dbName;
         this.dbVersion = dbVersion;
     }
@@ -47,8 +47,28 @@ export class IndexedDBCardStorage implements ICardStorage {
                     // Create indexes for better querying
                     store.createIndex('title', 'title', { unique: false });
                     store.createIndex('tags', 'tags', { unique: false, multiEntry: true });
-                    store.createIndex('created_at', 'created_at', { unique: false });
-                    store.createIndex('type', 'type', { unique: false });
+                    store.createIndex('createdAt', 'createdAt', { unique: false });
+                    store.createIndex('updatedAt', 'updatedAt', { unique: false });
+                } else {
+                    // Update existing store if needed
+                    const transaction = (event.target as IDBOpenDBRequest).transaction!;
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    // Remove old indexes if they exist
+                    if (store.indexNames.contains('created_at')) {
+                        store.deleteIndex('created_at');
+                    }
+                    if (store.indexNames.contains('type')) {
+                        store.deleteIndex('type');
+                    }
+                    
+                    // Add new indexes if they don't exist
+                    if (!store.indexNames.contains('createdAt')) {
+                        store.createIndex('createdAt', 'createdAt', { unique: false });
+                    }
+                    if (!store.indexNames.contains('updatedAt')) {
+                        store.createIndex('updatedAt', 'updatedAt', { unique: false });
+                    }
                 }
             };
         });
@@ -125,14 +145,17 @@ export class IndexedDBCardStorage implements ICardStorage {
                 const searchLower = filters.searchTerm.toLowerCase();
                 const matchesSearch = 
                     card.title.toLowerCase().includes(searchLower) ||
-                    card.description.toLowerCase().includes(searchLower) ||
+                    (card.content && card.content.toLowerCase().includes(searchLower)) ||
                     card.tags.some(tag => tag.toLowerCase().includes(searchLower));
                 if (!matchesSearch) return false;
             }
             
             // Date range filter
             if (filters.dateRange) {
-                if (card.created_at < filters.dateRange.from || card.created_at > filters.dateRange.to) {
+                const createdAt = card.createdAt instanceof Date 
+                    ? card.createdAt.toISOString() 
+                    : String(card.createdAt);
+                if (createdAt < filters.dateRange.from || createdAt > filters.dateRange.to) {
                     return false;
                 }
             }
@@ -188,14 +211,16 @@ export class IndexedDBCardStorage implements ICardStorage {
         }
     }
 
-    async createCard(cardData: Omit<Card, 'id' | 'created_at'>): Promise<DatabaseResult<Card>> {
+    async createCard(cardData: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>): Promise<DatabaseResult<Card>> {
         try {
             await this.ensureConnection();
             
+            const now = new Date();
             const card: Card = {
                 ...cardData,
                 id: this.generateId(),
-                created_at: new Date().toISOString()
+                createdAt: now,
+                updatedAt: now
             };
             
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
@@ -240,6 +265,7 @@ export class IndexedDBCardStorage implements ICardStorage {
                 ...existingResult.data,
                 ...updates,
                 id, // Ensure ID doesn't change
+                updatedAt: new Date() // Update timestamp
             };
             
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
@@ -296,15 +322,16 @@ export class IndexedDBCardStorage implements ICardStorage {
         }
     }
 
-    async bulkCreateCards(cardsData: Omit<Card, 'id' | 'created_at'>[]): Promise<DatabaseResult<Card[]>> {
+    async bulkCreateCards(cardsData: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<DatabaseResult<Card[]>> {
         try {
             await this.ensureConnection();
             
-            const now = new Date().toISOString();
+            const now = new Date();
             const cards: Card[] = cardsData.map(cardData => ({
                 ...cardData,
                 id: this.generateId(),
-                created_at: now
+                createdAt: now,
+                updatedAt: now
             }));
             
             const transaction = this.db!.transaction([this.storeName], 'readwrite');

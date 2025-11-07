@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { Card, CardFormData, FormErrors } from '../../types/index.ts';
+import React, { useState, useEffect } from 'react';
+import type { Card } from '../../types/index.ts';
 
 /**
  * Props for the AddCardModal component
@@ -7,66 +7,85 @@ import type { Card, CardFormData, FormErrors } from '../../types/index.ts';
 export interface AddCardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddCard: (card: Card) => void;
+  onSave: (card: Card) => void;
+  onDelete?: (cardId: number) => void;
+  editingCard?: Card | null;
 }
 
 /**
- * Modal component for adding a new card
+ * Modal component for adding or editing a card
  */
-const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onAddCard }) => {
-    const [formData, setFormData] = useState<CardFormData>({
-        title: '',
-        description: '',
-        url: '',
-        type: 'link',
-        tags: ''
-    });
-    const [errors, setErrors] = useState<FormErrors>({});
+const AddCardModal: React.FC<AddCardModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  onDelete,
+  editingCard 
+}) => {
+    const [title, setTitle] = useState('');
+    const [coverUrl, setCoverUrl] = useState('');
+    const [link, setLink] = useState('');
+    const [content, setContent] = useState('');
+    const [tagInput, setTagInput] = useState('');
+    const [tags, setTags] = useState<string[]>([]);
 
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {};
-        
-        if (!formData.title.trim()) {
-            newErrors.title = 'Title is required';
-        }
-        
-        if (!formData.url.trim()) {
-            newErrors.url = 'URL is required';
+    // Load card data when editing
+    useEffect(() => {
+        if (editingCard) {
+            setTitle(editingCard.title);
+            setCoverUrl(editingCard.coverUrl || '');
+            setLink(editingCard.link || '');
+            setContent(editingCard.content || '');
+            setTags(editingCard.tags);
         } else {
-            try {
-                new URL(formData.url);
-            } catch {
-                newErrors.url = 'Please enter a valid URL';
+            // Reset form when adding new card
+            setTitle('');
+            setCoverUrl('');
+            setLink('');
+            setContent('');
+            setTags([]);
+        }
+        setTagInput('');
+    }, [editingCard, isOpen]);
+
+    const handleSave = (): void => {
+        if (!title.trim()) {
+            alert('Title is required');
+            return;
+        }
+
+        const card: Card = {
+            id: editingCard?.id || Date.now(),
+            title: title.trim(),
+            coverUrl: coverUrl.trim() || undefined,
+            link: link.trim() || undefined,
+            content: content.trim() || undefined,
+            tags: tags,
+            createdAt: editingCard?.createdAt || new Date(),
+            updatedAt: new Date()
+        };
+
+        onSave(card);
+    };
+
+    const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+        if (e.key === 'Enter' && tagInput.trim()) {
+            e.preventDefault();
+            const newTag = tagInput.trim();
+            if (!tags.includes(newTag)) {
+                setTags([...tags, newTag]);
             }
-        }
-        
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-        e.preventDefault();
-        if (validateForm()) {
-            const newCard: Card = {
-                id: Date.now(),
-                title: formData.title.trim(),
-                description: formData.description.trim(),
-                url: formData.url.trim(),
-                type: formData.type,
-                tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-                created_at: new Date().toISOString()
-            };
-            onAddCard(newCard);
-            setFormData({ title: '', description: '', url: '', type: 'link', tags: '' });
-            setErrors({});
-            onClose();
+            setTagInput('');
         }
     };
 
-    const handleChange = (field: keyof CardFormData, value: string): void => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
+    const handleRemoveTag = (tagToRemove: string): void => {
+        setTags(tags.filter(tag => tag !== tagToRemove));
+    };
+
+    const handleDelete = (): void => {
+        if (editingCard && onDelete) {
+            onDelete(editingCard.id);
         }
     };
 
@@ -74,11 +93,11 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onAddCard 
 
     return (
         <div className="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            Add New Card
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                            {editingCard ? 'Edit Card' : 'Add New Card'}
                         </h2>
                         <button
                             onClick={onClose}
@@ -90,112 +109,151 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onAddCard 
                         </button>
                     </div>
                     
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-4">
+                        {/* Cover URL */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Cover Image URL
+                            </label>
+                            <input
+                                type="url"
+                                value={coverUrl}
+                                onChange={(e) => setCoverUrl(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                placeholder="https://example.com/image.jpg"
+                            />
+                            {coverUrl && (
+                                <div className="mt-2 relative w-full h-48 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                    <img 
+                                        src={coverUrl} 
+                                        alt="Cover preview" 
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Link */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Link (Optional)
+                            </label>
+                            <input
+                                type="url"
+                                value={link}
+                                onChange={(e) => setLink(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                placeholder="https://example.com"
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Add a link to reference the original source
+                            </p>
+                        </div>
+                        
+                        {/* Title */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Title *
                             </label>
                             <input
                                 type="text"
-                                value={formData.title}
-                                onChange={(e) => handleChange('title', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                                    errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                 placeholder="Enter card title"
-                            />
-                            {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-                        </div>
-                        
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Description
-                            </label>
-                            <textarea
-                                value={formData.description}
-                                onChange={(e) => handleChange('description', e.target.value)}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                                placeholder="Enter card description"
+                                required
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                URL *
-                            </label>
-                            <input
-                                type="url"
-                                value={formData.url}
-                                onChange={(e) => handleChange('url', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                                    errors.url ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                }`}
-                                placeholder="https://example.com"
-                            />
-                            {errors.url && <p className="text-red-500 text-xs mt-1">{errors.url}</p>}
-                        </div>
-                        
+                        {/* Content */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Type
+                                Content (Optional)
                             </label>
-                            <div className="flex space-x-4">
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        value="link"
-                                        checked={formData.type === 'link'}
-                                        onChange={(e) => handleChange('type', e.target.value as 'link' | 'image')}
-                                        className="mr-2 text-blue-500"
-                                    />
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">Link</span>
-                                </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        value="image"
-                                        checked={formData.type === 'image'}
-                                        onChange={(e) => handleChange('type', e.target.value as 'link' | 'image')}
-                                        className="mr-2 text-blue-500"
-                                    />
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">Image</span>
-                                </label>
-                            </div>
+                            <textarea
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                rows={8}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none font-mono text-sm"
+                                placeholder="Add rich text or markdown content here..."
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Supports HTML and Markdown formatting
+                            </p>
                         </div>
                         
+                        {/* Tags */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Tags
                             </label>
                             <input
                                 type="text"
-                                value={formData.tags}
-                                onChange={(e) => handleChange('tags', e.target.value)}
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={handleAddTag}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                placeholder="React, JavaScript, Design (comma separated)"
+                                placeholder="Type a tag and press Enter"
                             />
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Separate tags with commas
+                                Press Enter to add tags
                             </p>
+                            
+                            {/* Tag list */}
+                            {tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                    {tags.map((tag) => (
+                                        <span
+                                            key={tag}
+                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                                        >
+                                            {tag}
+                                            <button
+                                                onClick={() => handleRemoveTag(tag)}
+                                                className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         
-                        <div className="flex space-x-3 pt-4">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus-visible transition-colors"
-                            >
-                                Add Card
-                            </button>
+                        {/* Action buttons */}
+                        <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div>
+                                {editingCard && onDelete && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus-visible transition-colors"
+                                    >
+                                        Delete Card
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={onClose}
+                                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus-visible transition-colors"
+                                >
+                                    {editingCard ? 'Save Changes' : 'Add Card'}
+                                </button>
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

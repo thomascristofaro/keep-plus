@@ -3,13 +3,14 @@
  */
 
 export interface Card {
-  id: number;
+  id: number; // Unique identifier
   title: string;
-  description: string;
-  url: string;
-  type: 'link' | 'image';
-  tags: string[];
-  created_at: string;
+  coverUrl?: string; // Optional: URL or local path to cover image
+  link?: string; // Optional: original link for cover/title
+  content?: string; // Optional: Rich text or markdown
+  tags: string[]; // Array of tag names
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface TagColor {
@@ -25,14 +26,6 @@ export interface Tag {
   name: string;
   color: string;
   count?: number;
-}
-
-export interface CardFormData {
-  title: string;
-  description: string;
-  url: string;
-  type: 'link' | 'image';
-  tags: string;
 }
 
 export interface FormErrors {

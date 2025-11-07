@@ -8,91 +8,92 @@ export const initialCards: Card[] = [
     {
         id: 1,
         title: "React Documentation",
-        description: "Comprehensive guide to React.js with hooks and components",
-        url: "https://react.dev",
-        type: "link",
+        content: "Comprehensive guide to React.js with hooks and components",
+        link: "https://react.dev",
+        coverUrl: "https://react.dev/images/home/conf2021/cover.svg",
         tags: ["React", "JavaScript", "Frontend"],
-        created_at: "2025-10-20T10:30:00Z"
+        createdAt: new Date("2025-10-20T10:30:00Z"),
+        updatedAt: new Date("2025-10-20T10:30:00Z")
     },
     {
         id: 2,
         title: "TailwindCSS Components",
-        description: "Beautiful UI components built with Tailwind CSS",
-        url: "https://tailwindui.com",
-        type: "link",
+        content: "Beautiful UI components built with Tailwind CSS",
+        link: "https://tailwindui.com",
         tags: ["TailwindCSS", "UI", "Design"],
-        created_at: "2025-10-20T09:15:00Z"
+        createdAt: new Date("2025-10-20T09:15:00Z"),
+        updatedAt: new Date("2025-10-20T09:15:00Z")
     },
     {
         id: 3,
         title: "Project Architecture",
-        description: "System design diagram for the new microservices architecture",
-        url: "https://example.com/images/architecture.png",
-        type: "image",
+        content: "System design diagram for the new microservices architecture",
+        coverUrl: "https://example.com/images/architecture.png",
         tags: ["Architecture", "Design", "Planning"],
-        created_at: "2025-10-19T16:45:00Z"
+        createdAt: new Date("2025-10-19T16:45:00Z"),
+        updatedAt: new Date("2025-10-19T16:45:00Z")
     },
     {
         id: 4,
         title: "Material Design Guidelines",
-        description: "Google's design system principles and best practices",
-        url: "https://m3.material.io",
-        type: "link",
+        content: "Google's design system principles and best practices",
+        link: "https://m3.material.io",
         tags: ["Design", "UI/UX", "Guidelines"],
-        created_at: "2025-10-19T14:20:00Z"
+        createdAt: new Date("2025-10-19T14:20:00Z"),
+        updatedAt: new Date("2025-10-19T14:20:00Z")
     },
     {
         id: 5,
         title: "API Documentation Mockup",
-        description: "Visual mockup for the REST API documentation layout",
-        url: "https://example.com/images/api-mockup.jpg",
-        type: "image",
+        content: "Visual mockup for the REST API documentation layout",
+        coverUrl: "https://example.com/images/api-mockup.jpg",
         tags: ["API", "Documentation", "Mockup"],
-        created_at: "2025-10-18T11:30:00Z"
+        createdAt: new Date("2025-10-18T11:30:00Z"),
+        updatedAt: new Date("2025-10-18T11:30:00Z")
     },
     {
         id: 6,
         title: "GitHub Repository",
-        description: "Main project repository with all source code",
-        url: "https://github.com/example/project",
-        type: "link",
+        content: "Main project repository with all source code",
+        link: "https://github.com/example/project",
         tags: ["GitHub", "Code", "Repository"],
-        created_at: "2025-10-18T08:45:00Z"
+        createdAt: new Date("2025-10-18T08:45:00Z"),
+        updatedAt: new Date("2025-10-18T08:45:00Z")
     },
     {
         id: 7,
         title: "Design System Colors",
-        description: "Color palette and scheme for the project branding",
-        url: "https://example.com/images/colors.png",
-        type: "image",
+        content: "Color palette and scheme for the project branding",
+        coverUrl: "https://example.com/images/colors.png",
         tags: ["Design", "Colors", "Branding"],
-        created_at: "2025-10-17T15:20:00Z"
+        createdAt: new Date("2025-10-17T15:20:00Z"),
+        updatedAt: new Date("2025-10-17T15:20:00Z")
     },
     {
         id: 8,
         title: "Stack Overflow Solution",
-        description: "Clever solution for handling async state in React",
-        url: "https://stackoverflow.com/questions/example",
-        type: "link",
+        content: "Clever solution for handling async state in React",
+        link: "https://stackoverflow.com/questions/example",
         tags: ["React", "JavaScript", "Problem-solving"],
-        created_at: "2025-10-17T13:10:00Z"
+        createdAt: new Date("2025-10-17T13:10:00Z"),
+        updatedAt: new Date("2025-10-17T13:10:00Z")
     },
     {
         id: 9,
         title: "User Journey Map",
-        description: "Complete user experience flow from onboarding to conversion",
-        url: "https://example.com/images/user-journey.svg",
-        type: "image",
+        content: "Complete user experience flow from onboarding to conversion",
+        coverUrl: "https://example.com/images/user-journey.svg",
         tags: ["UX", "User Research", "Journey"],
-        created_at: "2025-10-16T09:30:00Z"
+        createdAt: new Date("2025-10-16T09:30:00Z"),
+        updatedAt: new Date("2025-10-16T09:30:00Z")
     },
     {
         id: 10,
         title: "Performance Optimization",
-        description: "Web vitals and performance metrics optimization techniques",
-        url: "https://web.dev/performance",
-        type: "link",
+        content: "Web vitals and performance metrics optimization techniques",
+        link: "https://web.dev/performance",
         tags: ["Performance", "Web Vitals", "Optimization"],
-        created_at: "2025-10-16T07:45:00Z"
+        createdAt: new Date("2025-10-16T07:45:00Z"),
+        updatedAt: new Date("2025-10-16T07:45:00Z")
     }
 ];

@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Tailwind v4 CSS-first configuration */
+@theme {
+  --color-keep-yellow: #fbbc04;
+  --color-keep-blue: #4285f4;
+  --color-keep-green: #34a853;
+  --color-keep-red: #ea4335;
+}

@@ -15,6 +15,8 @@ const App: React.FC = () => {
         error: storageError,
         initialized,
         addCard,
+        updateCard,
+        deleteCard,
         clearError
     } = useCardStorage();
     
@@ -22,8 +24,11 @@ const App: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [activeTag, setActiveTag] = useState<string>('');
     const [showAddModal, setShowAddModal] = useState<boolean>(false);
+    const [editingCard, setEditingCard] = useState<CardType | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
     const [singleColumn, setSingleColumn] = useState<boolean>(false);
+    const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
+    const [selectionMode, setSelectionMode] = useState<boolean>(false);
 
     // Apply dark mode to document
     useEffect(() => {
@@ -49,7 +54,7 @@ const App: React.FC = () => {
         return cards.filter((card: CardType) => {
             const matchesSearch = !searchTerm || 
                 card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                card.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (card.content && card.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 card.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
             
             const matchesTag = !activeTag || card.tags.includes(activeTag);
@@ -60,13 +65,65 @@ const App: React.FC = () => {
 
     // Add a new card to the storage
     const handleAddCard = async (newCard: CardType): Promise<void> => {
-        // Extract only the fields needed for storage (exclude id and created_at)
-        const { id, created_at, ...cardData } = newCard;
-        const success = await addCard(cardData);
+        const success = await addCard(newCard);
         if (success) {
             setShowAddModal(false);
+            setEditingCard(null);
         }
-        // Error handling is managed by the hook and displayed in the UI
+    };
+
+    // Update an existing card
+    const handleUpdateCard = async (updatedCard: CardType): Promise<void> => {
+        const success = await updateCard(updatedCard.id, updatedCard);
+        if (success) {
+            setShowAddModal(false);
+            setEditingCard(null);
+        }
+    };
+
+    // Open edit modal for a card
+    const handleEditCard = (card: CardType): void => {
+        setEditingCard(card);
+        setShowAddModal(true);
+    };
+
+    // Toggle card selection
+    const handleSelectCard = (cardId: number): void => {
+        setSelectedCards(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(cardId)) {
+                newSet.delete(cardId);
+            } else {
+                newSet.add(cardId);
+            }
+            return newSet;
+        });
+    };
+
+    // Delete selected cards
+    const handleDeleteSelected = async (): Promise<void> => {
+        if (selectedCards.size === 0) return;
+        
+        const confirmed = window.confirm(`Are you sure you want to delete ${selectedCards.size} card(s)?`);
+        if (!confirmed) return;
+
+        for (const cardId of selectedCards) {
+            await deleteCard(cardId);
+        }
+        setSelectedCards(new Set());
+        setSelectionMode(false);
+    };
+
+    // Delete a single card from edit modal
+    const handleDeleteCard = async (cardId: number): Promise<void> => {
+        const confirmed = window.confirm('Are you sure you want to delete this card?');
+        if (!confirmed) return;
+
+        const success = await deleteCard(cardId);
+        if (success) {
+            setShowAddModal(false);
+            setEditingCard(null);
+        }
     };
 
     // Show loading state while storage is initializing
@@ -149,6 +206,37 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="flex items-center space-x-3">
+                            {selectionMode && selectedCards.size > 0 && (
+                                <button
+                                    onClick={handleDeleteSelected}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors focus-visible flex items-center space-x-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    <span>Delete ({selectedCards.size})</span>
+                                </button>
+                            )}
+                            
+                            <button
+                                onClick={() => {
+                                    setSelectionMode(!selectionMode);
+                                    if (selectionMode) {
+                                        setSelectedCards(new Set());
+                                    }
+                                }}
+                                className={`p-2 rounded-lg font-medium transition-colors focus-visible ${
+                                    selectionMode 
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                }`}
+                                title={selectionMode ? 'Cancel selection' : 'Select cards'}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                            </button>
+                            
                             <button
                                 onClick={() => setSingleColumn(!singleColumn)}
                                 className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible"
@@ -166,7 +254,10 @@ const App: React.FC = () => {
                             </button>
                             
                             <button
-                                onClick={() => setShowAddModal(true)}
+                                onClick={() => {
+                                    setEditingCard(null);
+                                    setShowAddModal(true);
+                                }}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors focus-visible flex items-center space-x-2"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,18 +309,29 @@ const App: React.FC = () => {
                     ) : (
                         <div className={`masonry-grid ${singleColumn ? 'single-column' : ''}`}>
                             {filteredCards.map((card: CardType) => (
-                                <Card key={card.id} card={card} />
+                                <Card 
+                                    key={card.id} 
+                                    card={card} 
+                                    isSelected={selectedCards.has(card.id)}
+                                    onSelect={selectionMode ? handleSelectCard : undefined}
+                                    onEdit={handleEditCard}
+                                />
                             ))}
                         </div>
                     )}
                 </main>
             </div>
 
-            {/* Add Card Modal */}
+            {/* Add/Edit Card Modal */}
             <AddCardModal
                 isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onAddCard={handleAddCard}
+                onClose={() => {
+                    setShowAddModal(false);
+                    setEditingCard(null);
+                }}
+                onSave={editingCard ? handleUpdateCard : handleAddCard}
+                onDelete={editingCard ? handleDeleteCard : undefined}
+                editingCard={editingCard}
             />
         </div>
     );

@@ -9,28 +9,50 @@ import type { Card as CardType } from '../../types/index.ts';
  */
 export interface CardProps {
   card: CardType;
+  isSelected?: boolean;
+  onSelect?: (id: number) => void;
+  onEdit: (card: CardType) => void;
 }
 
 /**
- * Card component displays a single card with image/link content
+ * Card component displays a single card with square cover, title, link logo, and tags
  */
-const Card: React.FC<CardProps> = ({ card }) => {
+const Card: React.FC<CardProps> = ({ card, isSelected = false, onSelect, onEdit }) => {
     const [imageLoaded, setImageLoaded] = useState<boolean>(false);
     const [imageError, setImageError] = useState<boolean>(false);
     
-    const handleCardClick = (): void => {
-        window.open(card.url, '_blank', 'noopener,noreferrer');
+    const handleCardClick = (e: React.MouseEvent): void => {
+        // Check if click is on link logo or checkbox
+        const target = e.target as HTMLElement;
+        if (target.closest('.link-logo') || target.closest('.checkbox-container')) {
+            return;
+        }
+        onEdit(card);
     };
 
-    const renderThumbnail = () => {
-        if (card.type === 'image') {
+    const handleLinkClick = (e: React.MouseEvent): void => {
+        e.stopPropagation();
+        if (card.link) {
+            window.open(card.link, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        e.stopPropagation();
+        if (onSelect) {
+            onSelect(card.id);
+        }
+    };
+
+    const renderCover = () => {
+        if (card.coverUrl) {
             return (
-                <div className="relative overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 aspect-video">
+                <div className="relative overflow-hidden bg-gray-100 dark:bg-gray-800 aspect-square">
                     {!imageLoaded && !imageError && (
                         <div className="absolute inset-0 loading-shimmer"></div>
                     )}
                     <img
-                        src={card.url}
+                        src={card.coverUrl}
                         alt={card.title}
                         className={`w-full h-full object-cover transition-opacity duration-300 ${
                             imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -47,35 +69,8 @@ const Card: React.FC<CardProps> = ({ card }) => {
                     )}
                 </div>
             );
-        } else {
-            const faviconUrl = getFaviconUrl(card.url);
-            return (
-                <div className="flex items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-700">
-                    {faviconUrl && (
-                        <img
-                            src={faviconUrl}
-                            alt="Site favicon"
-                            className="w-8 h-8 mr-3 rounded"
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                            }}
-                        />
-                    )}
-                    <div className="flex-1">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-1">
-                            Link
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                            {getDomainFromUrl(card.url)}
-                        </div>
-                    </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                </div>
-            );
         }
+        return null;
     };
 
     return (
@@ -83,30 +78,74 @@ const Card: React.FC<CardProps> = ({ card }) => {
             className="masonry-item fade-in"
             onClick={handleCardClick}
         >
-            <div className="card-hover bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 cursor-pointer overflow-hidden">
-                {renderThumbnail()}
+            <div className="card-hover bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 cursor-pointer overflow-hidden relative">
+                {/* Checkbox for multi-select */}
+                {onSelect && (
+                    <div className="checkbox-container absolute top-2 left-2 z-10">
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={handleCheckboxChange}
+                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                )}
+                
+                {/* Cover Image */}
+                {renderCover()}
+                
                 <div className="p-4">
+                    {/* Title */}
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                         {card.title}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-3">
-                        {card.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                        {card.tags.map((tagName) => {
-                            const tag = { name: tagName, color: tagColors[tagName]?.bg || '#6b7280' };
-                            return (
-                                <TagBadge
-                                    key={tagName}
-                                    tag={tag}
-                                    isActive={false}
-                                    onClick={() => {
-                                        // Prevent card click when tag is clicked
-                                    }}
-                                />
-                            );
-                        })}
-                    </div>
+                    
+                    {/* Link Logo */}
+                    {card.link && (
+                        <div className="mb-2">
+                            <button
+                                onClick={handleLinkClick}
+                                className="link-logo inline-flex items-center text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                title="Open link"
+                            >
+                                {getFaviconUrl(card.link) && (
+                                    <img
+                                        src={getFaviconUrl(card.link) || undefined}
+                                        alt="Link"
+                                        className="w-4 h-4 mr-1"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                        }}
+                                    />
+                                )}
+                                <span className="truncate max-w-[150px]">{getDomainFromUrl(card.link)}</span>
+                                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                    
+                    {/* Tags */}
+                    {card.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                            {card.tags.map((tagName) => {
+                                const tag = { name: tagName, color: tagColors[tagName]?.bg || '#6b7280' };
+                                return (
+                                    <TagBadge
+                                        key={tagName}
+                                        tag={tag}
+                                        isActive={false}
+                                        onClick={() => {
+                                            // Do nothing - prevent card click
+                                        }}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

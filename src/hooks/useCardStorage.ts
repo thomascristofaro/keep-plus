@@ -27,7 +27,7 @@ export function useCardStorage() {
 
                 // Load existing cards
                 const result = await cardStorage.getCards({
-                    sortBy: 'created_at',
+                    sortBy: 'createdAt',
                     sortOrder: 'desc'
                 });
 
@@ -46,7 +46,7 @@ export function useCardStorage() {
                         if (importResult.success) {
                             // Reload cards after import
                             const reloadResult = await cardStorage.getCards({
-                                sortBy: 'created_at',
+                                sortBy: 'createdAt',
                                 sortOrder: 'desc'
                             });
                             if (reloadResult.success && reloadResult.data) {
@@ -83,7 +83,7 @@ export function useCardStorage() {
     /**
      * Add a new card
      */
-    const addCard = useCallback(async (cardData: Omit<Card, 'id' | 'created_at'>): Promise<boolean> => {
+    const addCard = useCallback(async (cardData: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> => {
         setError(null);
 
         try {
@@ -219,7 +219,7 @@ export function useCardStorage() {
             if (result.success) {
                 // Reload cards after import
                 const reloadResult = await cardStorage.getCards({
-                    sortBy: 'created_at',
+                    sortBy: 'createdAt',
                     sortOrder: 'desc'
                 });
                 
@@ -276,7 +276,7 @@ export function useCardStorage() {
 
         try {
             const result = await cardStorage.getCards({
-                sortBy: 'created_at',
+                sortBy: 'createdAt',
                 sortOrder: 'desc'
             });
 

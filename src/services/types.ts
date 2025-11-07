@@ -50,7 +50,7 @@ export interface ICardStorage {
     /**
      * Create a new card
      */
-    createCard(card: Omit<Card, 'id' | 'created_at'>): Promise<DatabaseResult<Card>>;
+    createCard(card: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>): Promise<DatabaseResult<Card>>;
 
     /**
      * Update an existing card
@@ -65,7 +65,7 @@ export interface ICardStorage {
     /**
      * Bulk operations for better performance
      */
-    bulkCreateCards(cards: Omit<Card, 'id' | 'created_at'>[]): Promise<DatabaseResult<Card[]>>;
+    bulkCreateCards(cards: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<DatabaseResult<Card[]>>;
     bulkDeleteCards(ids: number[]): Promise<DatabaseResult<void>>;
 
     /**

@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const filteredCards = cards.filter(card => {
         const matchesSearch = !searchTerm || 
             card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            card.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (card.content && card.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
             card.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
         
         const matchesTag = !activeTag || card.tags.includes(activeTag);
@@ -107,11 +107,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </div>
 
                     {/* Tags Section */}
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                             Tags
                         </h3>
-                        <div className="space-y-1 overflow-y-auto max-h-96">
+                        <div className="flex-1 space-y-1 overflow-y-auto">
                             {tags.map(tag => (
                                 <button
                                     key={tag.name}
