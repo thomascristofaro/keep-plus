@@ -12,7 +12,6 @@ export const initialCards: Card[] = [
         url: "https://react.dev",
         type: "link",
         tags: ["React", "JavaScript", "Frontend"],
-        favicon: "https://react.dev/favicon.ico",
         created_at: "2025-10-20T10:30:00Z"
     },
     {
@@ -22,7 +21,6 @@ export const initialCards: Card[] = [
         url: "https://tailwindui.com",
         type: "link",
         tags: ["TailwindCSS", "UI", "Design"],
-        favicon: "https://tailwindui.com/favicon.ico",
         created_at: "2025-10-20T09:15:00Z"
     },
     {
@@ -41,7 +39,6 @@ export const initialCards: Card[] = [
         url: "https://m3.material.io",
         type: "link",
         tags: ["Design", "UI/UX", "Guidelines"],
-        favicon: "https://m3.material.io/favicon.ico",
         created_at: "2025-10-19T14:20:00Z"
     },
     {
@@ -60,7 +57,6 @@ export const initialCards: Card[] = [
         url: "https://github.com/example/project",
         type: "link",
         tags: ["GitHub", "Code", "Repository"],
-        favicon: "https://github.com/favicon.ico",
         created_at: "2025-10-18T08:45:00Z"
     },
     {
@@ -79,7 +75,6 @@ export const initialCards: Card[] = [
         url: "https://stackoverflow.com/questions/example",
         type: "link",
         tags: ["React", "JavaScript", "Problem-solving"],
-        favicon: "https://stackoverflow.com/favicon.ico",
         created_at: "2025-10-17T13:10:00Z"
     },
     {
@@ -98,7 +93,6 @@ export const initialCards: Card[] = [
         url: "https://web.dev/performance",
         type: "link",
         tags: ["Performance", "Web Vitals", "Optimization"],
-        favicon: "https://web.dev/favicon.ico",
         created_at: "2025-10-16T07:45:00Z"
     }
 ];
