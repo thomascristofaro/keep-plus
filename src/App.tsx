@@ -28,6 +28,7 @@ const App: React.FC = () => {
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [selectionMode, setSelectionMode] = useState<boolean>(false);
+    const [wideCardMode, setWideCardMode] = useState<boolean>(false);
 
     // Apply dark mode to document
     useEffect(() => {
@@ -210,6 +211,20 @@ const App: React.FC = () => {
                             )}
                             
                             <button
+                                onClick={() => setWideCardMode(!wideCardMode)}
+                                className={`p-2 rounded-lg font-medium transition-colors focus-visible ${
+                                    wideCardMode 
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                }`}
+                                title={wideCardMode ? 'Normal width' : 'Double width'}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+                                </svg>
+                            </button>
+                            
+                            <button
                                 onClick={() => {
                                     setSelectionMode(!selectionMode);
                                     if (selectionMode) {
@@ -282,7 +297,7 @@ const App: React.FC = () => {
                             </p>
                         </div>
                     ) : (
-                        <div className="masonry-grid">
+                        <div className={`masonry-grid ${wideCardMode ? 'wide-card-mode' : ''}`}>
                             {filteredCards.map((card: CardType) => (
                                 <Card 
                                     key={card.id} 

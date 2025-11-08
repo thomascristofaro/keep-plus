@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import TagBadge from '../TagBadge/index.ts';
 import { getDomainFromUrl, getFaviconUrl } from '../../utils/helpers.ts';
 import { tagColors } from '../../utils/constants.ts';
@@ -101,13 +100,6 @@ const Card: React.FC<CardProps> = ({ card, isSelected = false, onSelect, onEdit 
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                         {card.title}
                     </h3>
-                    
-                    {/* Content Preview */}
-                    {card.content && (
-                        <div className="markdown-content text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-3">
-                            <ReactMarkdown>{card.content}</ReactMarkdown>
-                        </div>
-                    )}
                     
                     {/* Link Logo */}
                     {card.link && (
