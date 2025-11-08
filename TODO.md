@@ -1,3 +1,3 @@
 # Development TODO
-- do a button in the home up right for double the width of a card (and resume)
-- give to the card modal the double of the width
+- remove content, link and tags title field in card modal
+- link and tag fields in ui modal card must be fixed, like the footer

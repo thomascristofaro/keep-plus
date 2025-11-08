@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Card from './components/Card/index.ts';
 import Sidebar from './components/Sidebar/index.ts';
 import AddCardModal from './components/AddCardModal/index.ts';
@@ -9,6 +10,9 @@ import type { Card as CardType } from './types/index.ts';
  * Main App component that manages state and renders the application
  */
 const App: React.FC = () => {
+    const navigate = useNavigate();
+    const { tagName, noteId } = useParams<{ tagName?: string; noteId?: string }>();
+    
     const {
         cards,
         loading: storageLoading,
@@ -29,6 +33,41 @@ const App: React.FC = () => {
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [selectionMode, setSelectionMode] = useState<boolean>(false);
     const [wideCardMode, setWideCardMode] = useState<boolean>(false);
+
+    // Handle URL routing - sync URL params with state
+    useEffect(() => {
+        // Handle tag routing
+        if (tagName) {
+            const decodedTag = decodeURIComponent(tagName);
+            if (decodedTag !== activeTag) {
+                setActiveTag(decodedTag);
+            }
+        } else if (activeTag && !noteId) {
+            // Clear active tag when navigating away
+            setActiveTag('');
+        }
+
+        // Handle note routing
+        if (noteId) {
+            const id = parseInt(noteId, 10);
+            if (!isNaN(id) && cards.length > 0) {
+                const card = cards.find(c => c.id === id);
+                if (card) {
+                    if (!editingCard || editingCard.id !== id) {
+                        setEditingCard(card);
+                        setShowAddModal(true);
+                    }
+                } else {
+                    // Note not found, redirect to home
+                    navigate(activeTag ? `/tag/${encodeURIComponent(activeTag)}` : '/');
+                }
+            }
+        } else if (showAddModal && editingCard) {
+            // Close modal if URL doesn't have noteId anymore
+            setShowAddModal(false);
+            setEditingCard(null);
+        }
+    }, [tagName, noteId, cards, activeTag, editingCard, showAddModal, navigate]);
 
     // Apply dark mode to document
     useEffect(() => {
@@ -77,6 +116,7 @@ const App: React.FC = () => {
     const handleEditCard = (card: CardType): void => {
         setEditingCard(card);
         setShowAddModal(true);
+        navigate(`/note/${card.id}`);
     };
 
     // Toggle card selection
@@ -115,6 +155,29 @@ const App: React.FC = () => {
         if (success) {
             setShowAddModal(false);
             setEditingCard(null);
+            navigate('/');
+        }
+    };
+
+    // Handle tag selection from sidebar
+    const handleSetActiveTag = (tag: string): void => {
+        setActiveTag(tag);
+        if (tag) {
+            navigate(`/tag/${encodeURIComponent(tag)}`);
+        } else {
+            navigate('/');
+        }
+    };
+
+    // Handle modal close
+    const handleCloseModal = (): void => {
+        setShowAddModal(false);
+        setEditingCard(null);
+        // Navigate back to the previous view (either tag or home)
+        if (activeTag) {
+            navigate(`/tag/${encodeURIComponent(activeTag)}`);
+        } else {
+            navigate('/');
         }
     };
 
@@ -161,7 +224,7 @@ const App: React.FC = () => {
                 isDark={isDark}
                 setIsDark={setIsDark}
                 activeTag={activeTag}
-                setActiveTag={setActiveTag}
+                setActiveTag={handleSetActiveTag}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
                 isOpen={sidebarOpen}
@@ -315,10 +378,7 @@ const App: React.FC = () => {
             {/* Add/Edit Card Modal */}
             <AddCardModal
                 isOpen={showAddModal}
-                onClose={() => {
-                    setShowAddModal(false);
-                    setEditingCard(null);
-                }}
+                onClose={handleCloseModal}
                 onSave={editingCard ? handleUpdateCard : handleAddCard}
                 onDelete={editingCard ? handleDeleteCard : undefined}
                 editingCard={editingCard}

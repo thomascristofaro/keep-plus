@@ -103,7 +103,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
         <div className="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
             <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full h-[90vh] flex flex-col">
                 {/* Cover URL with Title Overlay */}
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                     {coverUrl ? (
                         <div className="relative w-full h-64 rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group">
                             <img 
@@ -116,7 +116,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                 }}
                             />
                             {/* Title Overlay - Bottom Left */}
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent p-6 pt-20">
+                            <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 via-black/50 to-transparent p-6 pt-20">
                                 <input
                                     type="text"
                                     value={title}
@@ -177,76 +177,67 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
 
                 {/* Scrollable Content Area */}
                 <div className="flex-1 overflow-y-auto min-h-0 p-6">
-                    <div className="space-y-4">
-                        {/* Content - with minimum height */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Content</label>
-                            <div className="min-h-[200px]">
-                                <MarkdownEditor
-                                    value={content}
-                                    onChange={(value) => setContent(value)}
-                                    placeholder="Add content here... (supports Markdown)"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Link */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Link</label>
-                            <input
-                                type="url"
-                                value={link}
-                                onChange={(e) => setLink(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                                placeholder="https://example.com"
-                            />
-                        </div>
-                        
-                        {/* Tags */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tags</label>
-                            <div className="flex flex-wrap gap-2 items-center">
-                                {tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                                    >
-                                        {tag}
-                                        <button
-                                            onClick={() => handleRemoveTag(tag)}
-                                            className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </span>
-                                ))}
-                                
-                                {/* Plus button to add tag */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newTag = prompt('Enter tag name:');
-                                        if (newTag && newTag.trim() && !tags.includes(newTag.trim())) {
-                                            setTags([...tags, newTag.trim()]);
-                                        }
-                                    }}
-                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                    title="Add tag"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
+                    <div className="min-h-[200px]">
+                        <MarkdownEditor
+                            value={content}
+                            onChange={(value) => setContent(value)}
+                            placeholder="Add content here... (supports Markdown)"
+                        />
                     </div>
                 </div>
 
-                {/* Fixed Footer */}
-                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
-                    <div className="flex justify-between items-center">
+                {/* Fixed Footer with Link and Tags */}
+                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 space-y-3">
+                    {/* Link Input */}
+                    <div>
+                        <input
+                            type="url"
+                            value={link}
+                            onChange={(e) => setLink(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                            placeholder="https://example.com"
+                        />
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 items-center">
+                        {tags.map((tag) => (
+                            <span
+                                key={tag}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                            >
+                                {tag}
+                                <button
+                                    onClick={() => handleRemoveTag(tag)}
+                                    className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </span>
+                        ))}
+                        
+                        {/* Plus button to add tag */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const newTag = prompt('Enter tag name:');
+                                if (newTag && newTag.trim() && !tags.includes(newTag.trim())) {
+                                    setTags([...tags, newTag.trim()]);
+                                }
+                            }}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            title="Add tag"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-between items-center pt-2">
                         {editingCard && onDelete ? (
                             <button
                                 onClick={handleDelete}
