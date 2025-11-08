@@ -26,7 +26,6 @@ const App: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState<boolean>(false);
     const [editingCard, setEditingCard] = useState<CardType | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-    const [singleColumn, setSingleColumn] = useState<boolean>(false);
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [selectionMode, setSelectionMode] = useState<boolean>(false);
 
@@ -65,20 +64,12 @@ const App: React.FC = () => {
 
     // Add a new card to the storage
     const handleAddCard = async (newCard: CardType): Promise<void> => {
-        const success = await addCard(newCard);
-        if (success) {
-            setShowAddModal(false);
-            setEditingCard(null);
-        }
+        await addCard(newCard);
     };
 
     // Update an existing card
     const handleUpdateCard = async (updatedCard: CardType): Promise<void> => {
-        const success = await updateCard(updatedCard.id, updatedCard);
-        if (success) {
-            setShowAddModal(false);
-            setEditingCard(null);
-        }
+        await updateCard(updatedCard.id, updatedCard);
     };
 
     // Open edit modal for a card
@@ -238,22 +229,6 @@ const App: React.FC = () => {
                             </button>
                             
                             <button
-                                onClick={() => setSingleColumn(!singleColumn)}
-                                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible"
-                                title={singleColumn ? 'Multi-column view' : 'Single column view'}
-                            >
-                                {singleColumn ? (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                                    </svg>
-                                )}
-                            </button>
-                            
-                            <button
                                 onClick={() => {
                                     setEditingCard(null);
                                     setShowAddModal(true);
@@ -307,7 +282,7 @@ const App: React.FC = () => {
                             </p>
                         </div>
                     ) : (
-                        <div className={`masonry-grid ${singleColumn ? 'single-column' : ''}`}>
+                        <div className="masonry-grid">
                             {filteredCards.map((card: CardType) => (
                                 <Card 
                                     key={card.id} 

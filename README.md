@@ -69,22 +69,6 @@ Card {
 
 ---
 
-## Development TODOs
-- Edit `Card` structure based on the information written here
-- Unify `Card` and `CardFormData` interfaces for consistency.
-- Ensure edit mode uses the same UI as add mode for cards.
-- now change for the UI point of view, how card are showed: 
-- in mobile view: 2 columns
-- cards are with a square cover if they have the coverurl set, then the title, no content, link logo if there is and then the tags if there are.
-- click on card -> edit mode
-- click on link logo -> open link
-- for create a new card -> button
-- little flag for selecting more cards -> button for delete selected
-- in edit mode button for deleting
-- adjust the height of the left menu, at the moment it seems has a fixed height, it must have the height of the display
-
----
-
 ## Getting Started
 1. Clone the repository.
 2. Install dependencies: `npm install`
