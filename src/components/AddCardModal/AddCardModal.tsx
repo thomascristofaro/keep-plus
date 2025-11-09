@@ -97,6 +97,15 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
         }
     };
 
+    // Calculate cover height based on content length
+    const getCoverHeight = (): string => {
+        const contentLength = content.length;
+        if (contentLength < 100) return 'h-96'; // ~384px - very short content
+        if (contentLength < 300) return 'h-80'; // ~320px - short content
+        if (contentLength < 600) return 'h-72'; // ~288px - medium content
+        return 'h-64'; // ~256px - long content (current default)
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -105,7 +114,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 {/* Cover URL with Title Overlay */}
                 <div className="relative shrink-0">
                     {coverUrl ? (
-                        <div className="relative w-full h-64 rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group">
+                        <div className={`relative w-full ${getCoverHeight()} rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group transition-all duration-300`}>
                             <img 
                                 src={coverUrl} 
                                 alt="Cover preview" 
@@ -144,7 +153,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                             </button>
                         </div>
                     ) : (
-                        <div className="relative w-full h-64 rounded-t-lg overflow-hidden">
+                        <div className={`relative w-full ${getCoverHeight()} rounded-t-lg overflow-hidden transition-all duration-300`}>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -175,15 +184,13 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                     )}
                 </div>
 
-                {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto min-h-0 p-6">
-                    <div className="min-h-[200px]">
-                        <MarkdownEditor
-                            value={content}
-                            onChange={(value) => setContent(value)}
-                            placeholder="Add content here... (supports Markdown)"
-                        />
-                    </div>
+                {/* Content Area */}
+                <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <MarkdownEditor
+                        value={content}
+                        onChange={(value) => setContent(value)}
+                        placeholder="Add content here... (supports Markdown)"
+                    />
                 </div>
 
                 {/* Fixed Footer with Link and Tags */}

@@ -50,13 +50,12 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 'guide'
             ] as any,
             minHeight: '200px',
-            maxHeight: '400px',
             autofocus: false,
         } as any;
     }, [placeholder]);
 
     return (
-        <div className="markdown-editor-wrapper">
+        <div className="markdown-editor-wrapper h-full flex flex-col">
             <SimpleMDE 
                 value={value} 
                 onChange={onChange}
