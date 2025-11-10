@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Card } from '../../types/index.ts';
+import { isInstagramUrl, fetchInstagramImageUrl } from '../../utils/instagram.ts';
 
 /**
  * Props for the AddCardModal component
@@ -46,6 +47,20 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setTags([]);
         }
     }, [editingCard, isOpen]);
+
+    // Auto-fetch Instagram image when Instagram link is detected
+    useEffect(() => {
+        const fetchInstagramImage = async () => {
+            if (link && isInstagramUrl(link)) {
+                const imageUrl = await fetchInstagramImageUrl(link);
+                if (imageUrl) {
+                    setCoverUrl(imageUrl);
+                }
+            }
+        };
+
+        fetchInstagramImage();
+    }, [link, coverUrl]);
 
     // Auto-save when any field changes
     useEffect(() => {

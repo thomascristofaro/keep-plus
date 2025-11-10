@@ -114,8 +114,6 @@ const App: React.FC = () => {
 
     // Open edit modal for a card
     const handleEditCard = (card: CardType): void => {
-        setEditingCard(card);
-        setShowAddModal(true);
         navigate(`/note/${card.id}`);
     };
 
