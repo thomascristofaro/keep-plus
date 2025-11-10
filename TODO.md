@@ -1,3 +1,6 @@
 # Development TODO
 - card modal UI, round corner in bottom like upper corner
-- when I put a instagram link inside the link field (like https://www.instagram.com/p/DQOiLcFiOXv/?igsh=emExaHJ5d3dwZXI1) -> get the image url of the post and put in the cover url
+- when not cover image url - the ui of the cover must be little
+- a button for remove the cover url
+- sometimes, when close the card, it automatically reopen and close another time
+- create a good logging layer in the app for trap metrics, errors and strange behavior

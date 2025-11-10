@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Card } from '../../types/index.ts';
 import { isInstagramUrl, fetchInstagramImageUrl } from '../../utils/instagram.ts';
+import { logger, trackAction } from '../../services/logger.ts';
 
 /**
  * Props for the AddCardModal component
@@ -32,7 +33,11 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
 
     // Load card data when editing
     useEffect(() => {
+        // Only load data when modal is opening
+        if (!isOpen) return;
+        
         if (editingCard) {
+            logger.info('Loading card for editing', { cardId: editingCard.id }, 'AddCardModal');
             setTitle(editingCard.title);
             setCoverUrl(editingCard.coverUrl || '');
             setLink(editingCard.link || '');
@@ -40,6 +45,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setTags(editingCard.tags);
         } else {
             // Reset form when adding new card
+            logger.info('Opening modal for new card', undefined, 'AddCardModal');
             setTitle('');
             setCoverUrl('');
             setLink('');
@@ -52,9 +58,17 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     useEffect(() => {
         const fetchInstagramImage = async () => {
             if (link && isInstagramUrl(link)) {
-                const imageUrl = await fetchInstagramImageUrl(link);
-                if (imageUrl) {
-                    setCoverUrl(imageUrl);
+                try {
+                    logger.info('Fetching Instagram image', { link }, 'AddCardModal');
+                    const imageUrl = await fetchInstagramImageUrl(link);
+                    if (imageUrl) {
+                        setCoverUrl(imageUrl);
+                        logger.info('Instagram image fetched successfully', { imageUrl }, 'AddCardModal');
+                    } else {
+                        logger.warn('No Instagram image URL returned', { link }, 'AddCardModal');
+                    }
+                } catch (error) {
+                    logger.error('Failed to fetch Instagram image', error, 'AddCardModal');
                 }
             }
         };
@@ -78,6 +92,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 updatedAt: new Date()
             };
 
+            logger.debug('Auto-saving card', { cardId: card.id, title: card.title }, 'AddCardModal');
             onSave(card);
         }, 500); // Debounce by 500ms
 
@@ -88,25 +103,34 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-                onClose();
+                // Use setTimeout to ensure we don't interfere with other click handlers
+                setTimeout(() => {
+                    onClose();
+                }, 0);
             }
         };
 
         if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
+            // Add a small delay before attaching the listener to prevent immediate close
+            const timeoutId = setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+            }, 100);
+            
+            return () => {
+                clearTimeout(timeoutId);
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
         }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
     }, [isOpen, onClose]);
 
     const handleRemoveTag = (tagToRemove: string): void => {
+        trackAction('remove_tag', { tag: tagToRemove });
         setTags(tags.filter(tag => tag !== tagToRemove));
     };
 
     const handleDelete = (): void => {
         if (editingCard && onDelete) {
+            trackAction('delete_card', { cardId: editingCard.id });
             onDelete(editingCard.id);
         }
     };
@@ -158,16 +182,27 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                         setCoverUrl(newUrl);
                                     }
                                 }}
-                                className="absolute top-4 right-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="absolute top-4 right-16 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 dark:hover:bg-gray-700"
                                 title="Change cover URL"
                             >
                                 <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
                             </button>
+                            {/* Remove Cover Button */}
+                            <button
+                                type="button"
+                                onClick={() => setCoverUrl('')}
+                                className="absolute top-4 right-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                                title="Remove cover image"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
                         </div>
                     ) : (
-                        <div className={`relative w-full ${getCoverHeight()} rounded-t-lg overflow-hidden transition-all duration-300`}>
+                        <div className="relative w-full rounded-t-lg overflow-hidden transition-all duration-300">
                             <button
                                 type="button"
                                 onClick={() => {
@@ -176,20 +211,20 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                         setCoverUrl(newUrl.trim());
                                     }
                                 }}
-                                className="w-full h-full border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                className="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                             >
-                                <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                <span className="text-sm font-medium">Add Cover Image</span>
+                                <span className="text-xs font-medium">Add Cover Image</span>
                             </button>
                             {/* Title Input when no cover */}
-                            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-100 dark:bg-gray-800">
+                            <div className="p-4 bg-gray-100 dark:bg-gray-800">
                                 <input
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full px-3 py-2 text-3xl font-bold border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                                    className="w-full px-3 py-2 text-2xl font-bold border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                     placeholder="Enter card title *"
                                     required
                                 />
@@ -209,7 +244,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 </div>
 
                 {/* Fixed Footer with Link and Tags */}
-                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 space-y-3">
+                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 space-y-3 rounded-b-lg">
                     {/* Link Input */}
                     <div>
                         <input

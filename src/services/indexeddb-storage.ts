@@ -1,5 +1,6 @@
 import type { Card } from '../types/index.ts';
 import type { ICardStorage, DatabaseResult, QueryOptions } from './types.ts';
+import { logger } from './logger.ts';
 
 /**
  * IndexedDB implementation of the card storage interface
@@ -17,9 +18,12 @@ export class IndexedDBCardStorage implements ICardStorage {
 
     async initialize(): Promise<DatabaseResult<void>> {
         try {
+            logger.info('Initializing IndexedDB', { dbName: this.dbName, dbVersion: this.dbVersion }, 'IndexedDBCardStorage');
             await this.openDatabase();
+            logger.info('IndexedDB initialized successfully', undefined, 'IndexedDBCardStorage');
             return { success: true };
         } catch (error) {
+            logger.error('Failed to initialize IndexedDB', error, 'IndexedDBCardStorage');
             return {
                 success: false,
                 error: `Failed to initialize IndexedDB: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -223,6 +227,8 @@ export class IndexedDBCardStorage implements ICardStorage {
                 updatedAt: now
             };
             
+            logger.debug('Creating card', { cardId: card.id, title: card.title }, 'IndexedDBCardStorage');
+            
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
             
@@ -230,10 +236,12 @@ export class IndexedDBCardStorage implements ICardStorage {
                 const request = store.add(card);
                 
                 request.onsuccess = () => {
+                    logger.info('Card created successfully', { cardId: card.id }, 'IndexedDBCardStorage');
                     resolve({ success: true, data: card });
                 };
                 
                 request.onerror = () => {
+                    logger.error('Failed to create card', request.error, 'IndexedDBCardStorage');
                     resolve({
                         success: false,
                         error: `Failed to create card: ${request.error?.message}`
@@ -241,6 +249,7 @@ export class IndexedDBCardStorage implements ICardStorage {
                 };
             });
         } catch (error) {
+            logger.error('Exception while creating card', error, 'IndexedDBCardStorage');
             return {
                 success: false,
                 error: `Failed to create card: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -297,6 +306,8 @@ export class IndexedDBCardStorage implements ICardStorage {
         try {
             await this.ensureConnection();
             
+            logger.debug('Deleting card', { cardId: id }, 'IndexedDBCardStorage');
+            
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
             
@@ -304,10 +315,12 @@ export class IndexedDBCardStorage implements ICardStorage {
                 const request = store.delete(id);
                 
                 request.onsuccess = () => {
+                    logger.info('Card deleted successfully', { cardId: id }, 'IndexedDBCardStorage');
                     resolve({ success: true });
                 };
                 
                 request.onerror = () => {
+                    logger.error('Failed to delete card', request.error, 'IndexedDBCardStorage');
                     resolve({
                         success: false,
                         error: `Failed to delete card: ${request.error?.message}`
@@ -315,6 +328,7 @@ export class IndexedDBCardStorage implements ICardStorage {
                 };
             });
         } catch (error) {
+            logger.error('Exception while deleting card', error, 'IndexedDBCardStorage');
             return {
                 success: false,
                 error: `Failed to delete card: ${error instanceof Error ? error.message : 'Unknown error'}`

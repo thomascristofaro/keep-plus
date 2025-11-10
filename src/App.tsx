@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar/index.ts';
 import AddCardModal from './components/AddCardModal/index.ts';
 import { useCardStorage } from './hooks/useCardStorage.ts';
 import type { Card as CardType } from './types/index.ts';
+import { logger, trackAction } from './services/logger.ts';
 
 /**
  * Main App component that manages state and renders the application
@@ -40,11 +41,13 @@ const App: React.FC = () => {
         if (tagName) {
             const decodedTag = decodeURIComponent(tagName);
             if (decodedTag !== activeTag) {
+                logger.trackPageView(`/tag/${decodedTag}`);
                 setActiveTag(decodedTag);
             }
         } else if (activeTag && !noteId) {
             // Clear active tag when navigating away
             setActiveTag('');
+            logger.trackPageView('/');
         }
 
         // Handle note routing
@@ -54,20 +57,24 @@ const App: React.FC = () => {
                 const card = cards.find(c => c.id === id);
                 if (card) {
                     if (!editingCard || editingCard.id !== id) {
+                        logger.trackPageView(`/note/${id}`);
                         setEditingCard(card);
                         setShowAddModal(true);
                     }
                 } else {
                     // Note not found, redirect to home
+                    logger.warn('Note not found, redirecting', { noteId: id }, 'App');
                     navigate(activeTag ? `/tag/${encodeURIComponent(activeTag)}` : '/');
                 }
             }
-        } else if (showAddModal && editingCard) {
-            // Close modal if URL doesn't have noteId anymore
-            setShowAddModal(false);
-            setEditingCard(null);
+        } else if (!noteId && (showAddModal || editingCard)) {
+            // Close modal if URL doesn't have noteId anymore (but don't trigger if already closed)
+            if (showAddModal || editingCard) {
+                setShowAddModal(false);
+                setEditingCard(null);
+            }
         }
-    }, [tagName, noteId, cards, activeTag, editingCard, showAddModal, navigate]);
+    }, [tagName, noteId, cards, activeTag, navigate]);
 
     // Apply dark mode to document
     useEffect(() => {
@@ -137,6 +144,8 @@ const App: React.FC = () => {
         const confirmed = window.confirm(`Are you sure you want to delete ${selectedCards.size} card(s)?`);
         if (!confirmed) return;
 
+        trackAction('delete_multiple_cards', { count: selectedCards.size });
+        
         for (const cardId of selectedCards) {
             await deleteCard(cardId);
         }
