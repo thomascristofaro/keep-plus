@@ -117,6 +117,10 @@ const App: React.FC = () => {
     // Update an existing card
     const handleUpdateCard = async (updatedCard: CardType): Promise<void> => {
         await updateCard(updatedCard.id, updatedCard);
+        // Update the editingCard state so the modal shows the updated data
+        if (editingCard && editingCard.id === updatedCard.id) {
+            setEditingCard(updatedCard);
+        }
     };
 
     // Open edit modal for a card
