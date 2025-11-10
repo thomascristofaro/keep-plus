@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MarkdownEditor from '../MarkdownEditor/index.ts';
 import type { Card } from '../../types/index.ts';
 
 /**
@@ -100,10 +99,10 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     // Calculate cover height based on content length
     const getCoverHeight = (): string => {
         const contentLength = content.length;
-        if (contentLength < 100) return 'h-96'; // ~384px - very short content
-        if (contentLength < 300) return 'h-80'; // ~320px - short content
-        if (contentLength < 600) return 'h-72'; // ~288px - medium content
-        return 'h-64'; // ~256px - long content (current default)
+        if (contentLength < 100) return 'h-[32rem]'; // ~512px - very short content
+        if (contentLength < 300) return 'h-96'; // ~384px - short content
+        if (contentLength < 600) return 'h-72'; // ~320px - medium content
+        return 'h-64'; // ~288px - long content
     };
 
     if (!isOpen) return null;
@@ -185,11 +184,12 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                    <MarkdownEditor
+                <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-4">
+                    <textarea
                         value={content}
-                        onChange={(value) => setContent(value)}
-                        placeholder="Add content here... (supports Markdown)"
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Add content here..."
+                        className="w-full h-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none"
                     />
                 </div>
 
