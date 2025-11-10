@@ -76,28 +76,24 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
         fetchInstagramImage();
     }, [link, coverUrl]);
 
-    // Auto-save when any field changes
-    useEffect(() => {
+    // Auto-save handler - only called after user actions
+    const handleAutoSave = () => {
         if (!isOpen || !title.trim()) return;
 
-        const timeoutId = setTimeout(() => {
-            const card: Card = {
-                id: editingCard?.id || Date.now(),
-                title: title.trim(),
-                coverUrl: coverUrl.trim() || undefined,
-                link: link.trim() || undefined,
-                content: content.trim() || undefined,
-                tags: tags,
-                createdAt: editingCard?.createdAt || new Date(),
-                updatedAt: new Date()
-            };
+        const card: Card = {
+            id: editingCard?.id || Date.now(),
+            title: title.trim(),
+            coverUrl: coverUrl.trim() || undefined,
+            link: link.trim() || undefined,
+            content: content.trim() || undefined,
+            tags: tags,
+            createdAt: editingCard?.createdAt || new Date(),
+            updatedAt: new Date()
+        };
 
-            logger.debug('Auto-saving card', { cardId: card.id, title: card.title }, 'AddCardModal');
-            onSave(card);
-        }, 500); // Debounce by 500ms
-
-        return () => clearTimeout(timeoutId);
-    }, [title, coverUrl, link, content, tags, editingCard, onSave, isOpen]);
+        logger.debug('Auto-saving card', { cardId: card.id, title: card.title }, 'AddCardModal');
+        onSave(card);
+    };
 
     // Handle click outside to close
     useEffect(() => {
@@ -126,6 +122,49 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     const handleRemoveTag = (tagToRemove: string): void => {
         trackAction('remove_tag', { tag: tagToRemove });
         setTags(tags.filter(tag => tag !== tagToRemove));
+        // Trigger autosave after tag removal
+        setTimeout(handleAutoSave, 0);
+    };
+
+    const handleAddTag = (newTag: string): void => {
+        if (newTag && newTag.trim() && !tags.includes(newTag.trim())) {
+            setTags([...tags, newTag.trim()]);
+            // Trigger autosave after tag addition
+            setTimeout(handleAutoSave, 0);
+        }
+    };
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        setTitle(e.target.value);
+    };
+
+    const handleTitleBlur = (): void => {
+        // Trigger autosave after title edit
+        handleAutoSave();
+    };
+
+    const handleCoverUrlChange = (newUrl: string): void => {
+        setCoverUrl(newUrl);
+        // Trigger autosave after cover URL change
+        setTimeout(handleAutoSave, 0);
+    };
+
+    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+        setContent(e.target.value);
+    };
+
+    const handleContentBlur = (): void => {
+        // Trigger autosave after content edit
+        handleAutoSave();
+    };
+
+    const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        setLink(e.target.value);
+    };
+
+    const handleLinkBlur = (): void => {
+        // Trigger autosave after link edit
+        handleAutoSave();
     };
 
     const handleDelete = (): void => {
@@ -167,7 +206,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                 <input
                                     type="text"
                                     value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    onChange={handleTitleChange}
+                                    onBlur={handleTitleBlur}
                                     className="w-full px-3 py-2 text-3xl font-bold border-none focus:outline-none focus:ring-2 focus:ring-white/50 bg-transparent text-white placeholder-white/70 rounded"
                                     placeholder="Enter card title *"
                                     required
@@ -179,7 +219,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                 onClick={() => {
                                     const newUrl = prompt('Enter cover image URL:', coverUrl);
                                     if (newUrl !== null) {
-                                        setCoverUrl(newUrl);
+                                        handleCoverUrlChange(newUrl);
                                     }
                                 }}
                                 className="absolute top-4 right-16 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -192,7 +232,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                             {/* Remove Cover Button */}
                             <button
                                 type="button"
-                                onClick={() => setCoverUrl('')}
+                                onClick={() => handleCoverUrlChange('')}
                                 className="absolute top-4 right-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
                                 title="Remove cover image"
                             >
@@ -208,7 +248,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                 onClick={() => {
                                     const newUrl = prompt('Enter cover image URL:');
                                     if (newUrl && newUrl.trim()) {
-                                        setCoverUrl(newUrl.trim());
+                                        handleCoverUrlChange(newUrl.trim());
                                     }
                                 }}
                                 className="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -223,7 +263,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                                 <input
                                     type="text"
                                     value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    onChange={handleTitleChange}
+                                    onBlur={handleTitleBlur}
                                     className="w-full px-3 py-2 text-2xl font-bold border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                     placeholder="Enter card title *"
                                     required
@@ -237,7 +278,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-4">
                     <textarea
                         value={content}
-                        onChange={(e) => setContent(e.target.value)}
+                        onChange={handleContentChange}
+                        onBlur={handleContentBlur}
                         placeholder="Add content here..."
                         className="w-full h-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none"
                     />
@@ -250,7 +292,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                         <input
                             type="url"
                             value={link}
-                            onChange={(e) => setLink(e.target.value)}
+                            onChange={handleLinkChange}
+                            onBlur={handleLinkBlur}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                             placeholder="https://example.com"
                         />
@@ -280,9 +323,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                             type="button"
                             onClick={() => {
                                 const newTag = prompt('Enter tag name:');
-                                if (newTag && newTag.trim() && !tags.includes(newTag.trim())) {
-                                    setTags([...tags, newTag.trim()]);
-                                }
+                                handleAddTag(newTag || '');
                             }}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                             title="Add tag"
