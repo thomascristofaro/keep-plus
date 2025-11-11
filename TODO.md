@@ -1,7 +1,3 @@
 # Development TODO
-- se non hanno il titolo -> in home mostra i primi cento caratteri della content
-- sistemare il flow di inserimento, quando cambio tab mi inserisce un nuovo record
-- sistemare input link instagram
-- fare input link pinterest
-- ✅ capire come convertire in app (DONE: Capacitor configurato, vedi CAPACITOR_TESTING.md)
-- ✅ capire come fare il condividi su questa app (DONE: Web Share Target implementato)
+- in the home, if the card doesn't have a cover link url or title -> show the first 50 chars of the content
+- Check the insert new card flow, do a research inside the project, write a md document with the current implementation of the insert card flow, step by step of what happen when you create a new card

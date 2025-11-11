@@ -97,9 +97,18 @@ const Card: React.FC<CardProps> = ({ card, isSelected = false, onSelect, onEdit 
                 
                 <div className="p-4">
                     {/* Title */}
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
-                        {card.title}
-                    </h3>
+                    {card.title && card.title.trim() !== '' && (
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                            {card.title}
+                        </h3>
+                    )}
+
+                    {/* Content Preview if no cover/title */}
+                    {!card.coverUrl && (!card.title || card.title.trim() === '') && card.content && (
+                        <div className="mb-2">
+                            <span className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3">{card.content.slice(0, 50)}</span>
+                        </div>
+                    )}
                     
                     {/* Link Logo */}
                     {card.link && (
