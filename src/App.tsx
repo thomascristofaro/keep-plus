@@ -126,17 +126,21 @@ const App: React.FC = () => {
         });
     }, [cards, searchTerm, activeTag]);
 
-    // Add a new card to the storage
-    const handleAddCard = async (newCard: CardType): Promise<void> => {
-        await addCard(newCard);
-    };
-
-    // Update an existing card
-    const handleUpdateCard = async (updatedCard: CardType): Promise<void> => {
-        await updateCard(updatedCard.id, updatedCard);
-        // Update the editingCard state so the modal shows the updated data
-        if (editingCard && editingCard.id === updatedCard.id) {
-            setEditingCard(updatedCard);
+    // Unified handler for saving cards (create or update)
+    const handleSaveCard = async (card: Partial<CardType>): Promise<CardType | null> => {
+        if (card.id) {
+            // Update existing card
+            await updateCard(card.id, card);
+            const fullCard = card as CardType;
+            // Update the editingCard state so the modal shows the updated data
+            if (editingCard && editingCard.id === card.id) {
+                setEditingCard(fullCard);
+            }
+            return fullCard;
+        } else {
+            // Create new card
+            const result = await addCard(card as Omit<CardType, 'id' | 'createdAt' | 'updatedAt'>);
+            return result;
         }
     };
 
@@ -407,7 +411,7 @@ const App: React.FC = () => {
             <AddCardModal
                 isOpen={showAddModal}
                 onClose={handleCloseModal}
-                onSave={editingCard ? handleUpdateCard : handleAddCard}
+                onSave={handleSaveCard}
                 onDelete={editingCard ? handleDeleteCard : undefined}
                 editingCard={editingCard}
                 sharedData={sharedData}

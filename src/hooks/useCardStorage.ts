@@ -83,24 +83,22 @@ export function useCardStorage() {
     /**
      * Add a new card
      */
-    const addCard = useCallback(async (cardData: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> => {
+    const addCard = useCallback(async (cardData: Omit<Card, 'id' | 'createdAt' | 'updatedAt'>): Promise<Card | null> => {
         setError(null);
-
         try {
             const result = await cardStorage.createCard(cardData);
-            
             if (result.success && result.data) {
                 setCards(prev => [result.data!, ...prev]);
-                return true;
+                return result.data!;
             } else {
                 setError(result.error || 'Failed to create card');
-                return false;
+                return null;
             }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to create card';
             setError(errorMessage);
             console.error('Error creating card:', err);
-            return false;
+            return null;
         }
     }, []);
 

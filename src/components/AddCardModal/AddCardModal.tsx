@@ -7,12 +7,12 @@ import { logger, trackAction } from '../../services/logger.ts';
  * Props for the AddCardModal component
  */
 export interface AddCardModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (card: Card) => void;
-  onDelete?: (cardId: number) => void;
-  editingCard?: Card | null;
-  sharedData?: { title?: string; text?: string; url?: string } | null;
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (card: Partial<Card>) => Promise<Card | null>;
+    onDelete?: (cardId: number) => void;
+    editingCard?: Card | null;
+    sharedData?: { title?: string; text?: string; url?: string } | null;
 }
 
 /**
@@ -31,6 +31,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     const [link, setLink] = useState('');
     const [content, setContent] = useState('');
     const [tags, setTags] = useState<string[]>([]);
+    const [dbId, setDbId] = useState<number | null>(null); // Track DB id after first save
+    const [createdAt, setCreatedAt] = useState<Date | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
     // Load card data when editing
@@ -45,6 +47,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setLink(editingCard.link || '');
             setContent(editingCard.content || '');
             setTags(editingCard.tags);
+            setDbId(editingCard.id);
+            setCreatedAt(editingCard.createdAt);
         } else if (sharedData) {
             // Load shared data from external app
             logger.info('Loading shared data', sharedData, 'AddCardModal');
@@ -52,6 +56,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setLink(sharedData.url || '');
             setContent(sharedData.text || '');
             setTags([]);
+            setDbId(null);
+            setCreatedAt(null);
         } else {
             // Reset form when adding new card
             logger.info('Opening modal for new card', undefined, 'AddCardModal');
@@ -60,6 +66,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setLink('');
             setContent('');
             setTags([]);
+            setDbId(null);
+            setCreatedAt(null);
         }
     }, [editingCard, sharedData, isOpen]);
 
@@ -86,22 +94,39 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     }, [link, coverUrl]);
 
     // Auto-save handler - only called after user actions
-    const handleAutoSave = () => {
+    const handleAutoSave = async () => {
         if (!isOpen || !title.trim()) return;
 
-        const card: Card = {
-            id: editingCard?.id || Date.now(),
-            title: title.trim(),
-            coverUrl: coverUrl.trim() || undefined,
-            link: link.trim() || undefined,
-            content: content.trim() || undefined,
-            tags: tags,
-            createdAt: editingCard?.createdAt || new Date(),
-            updatedAt: new Date()
-        };
-
-        logger.debug('Auto-saving card', { cardId: card.id, title: card.title }, 'AddCardModal');
-        onSave(card);
+        if (dbId == null) {
+            // First save: create card (no id, no createdAt)
+            const cardToCreate = {
+                title: title.trim(),
+                coverUrl: coverUrl.trim() || undefined,
+                link: link.trim() || undefined,
+                content: content.trim() || undefined,
+                tags: tags
+            };
+            logger.debug('Auto-saving new card (create)', { title: cardToCreate.title }, 'AddCardModal');
+            const saved = await onSave(cardToCreate);
+            if (saved && typeof saved === 'object' && 'id' in saved && saved.id) {
+                setDbId(saved.id);
+                setCreatedAt(saved.createdAt ? new Date(saved.createdAt) : new Date());
+            }
+        } else {
+            // Update existing card
+            const cardToUpdate = {
+                id: dbId,
+                title: title.trim(),
+                coverUrl: coverUrl.trim() || undefined,
+                link: link.trim() || undefined,
+                content: content.trim() || undefined,
+                tags: tags,
+                createdAt: createdAt || new Date(),
+                updatedAt: new Date()
+            };
+            logger.debug('Auto-saving card (update)', { cardId: dbId, title: cardToUpdate.title }, 'AddCardModal');
+            await onSave(cardToUpdate);
+        }
     };
 
     // Handle click outside to close
@@ -148,29 +173,13 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     };
 
     const handleTitleBlur = (): void => {
-        // Trigger autosave after title edit
-        handleAutoSave();
+        setTimeout(handleAutoSave, 0);
     };
 
     const handleCoverUrlChange = (newUrl: string): void => {
         setCoverUrl(newUrl);
-        
-        // Immediate save with the new cover URL
         if (!title.trim()) return;
-        
-        const card: Card = {
-            id: editingCard?.id || Date.now(),
-            title: title.trim(),
-            coverUrl: newUrl.trim() || undefined,
-            link: link.trim() || undefined,
-            content: content.trim() || undefined,
-            tags: tags,
-            createdAt: editingCard?.createdAt || new Date(),
-            updatedAt: new Date()
-        };
-
-        logger.debug('Saving card after cover URL change', { cardId: card.id, coverUrl: newUrl }, 'AddCardModal');
-        onSave(card);
+        setTimeout(handleAutoSave, 0);
     };
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
@@ -178,8 +187,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     };
 
     const handleContentBlur = (): void => {
-        // Trigger autosave after content edit
-        handleAutoSave();
+        setTimeout(handleAutoSave, 0);
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -187,8 +195,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     };
 
     const handleLinkBlur = (): void => {
-        // Trigger autosave after link edit
-        handleAutoSave();
+        setTimeout(handleAutoSave, 0);
     };
 
     const handleDelete = (): void => {
