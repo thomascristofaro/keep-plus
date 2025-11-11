@@ -3,5 +3,5 @@
 - sistemare il flow di inserimento, quando cambio tab mi inserisce un nuovo record
 - sistemare input link instagram
 - fare input link pinterest
-- capire come convertire in app
-- capire come fare il condividi su questa app
+- ✅ capire come convertire in app (DONE: Capacitor configurato, vedi CAPACITOR_TESTING.md)
+- ✅ capire come fare il condividi su questa app (DONE: Web Share Target implementato)

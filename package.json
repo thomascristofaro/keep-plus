@@ -6,10 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:mobile": "cross-env CAPACITOR=true npm run build",
+    "build:apk": "cross-env CAPACITOR=true npm run build && npx cap sync android && cd android && .\\gradlew assembleDebug",
+    "install:phone": "cd android && .\\gradlew installDebug",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android": "cross-env CAPACITOR=true npm run build && npx cap sync android && npx cap open android",
+    "ios": "cross-env CAPACITOR=true npm run build && npx cap sync ios && npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/share": "^7.0.2",
     "@tailwindcss/vite": "^4.1.17",
     "easymde": "^2.20.0",
     "react": "^18.3.1",
@@ -24,6 +34,7 @@
     "@types/react": "^18.3.26",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.0.4",
+    "cross-env": "^10.1.0",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",

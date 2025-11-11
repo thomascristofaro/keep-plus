@@ -4,6 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/keep-plus/',
+  base: process.env.CAPACITOR ? '/' : '/keep-plus/',
   plugins: [react(), tailwindcss()],
 })

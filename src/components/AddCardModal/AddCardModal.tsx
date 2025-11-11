@@ -12,6 +12,7 @@ export interface AddCardModalProps {
   onSave: (card: Card) => void;
   onDelete?: (cardId: number) => void;
   editingCard?: Card | null;
+  sharedData?: { title?: string; text?: string; url?: string } | null;
 }
 
 /**
@@ -22,7 +23,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
   onClose, 
   onSave, 
   onDelete,
-  editingCard 
+  editingCard,
+  sharedData
 }) => {
     const [title, setTitle] = useState('');
     const [coverUrl, setCoverUrl] = useState('');
@@ -43,6 +45,13 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setLink(editingCard.link || '');
             setContent(editingCard.content || '');
             setTags(editingCard.tags);
+        } else if (sharedData) {
+            // Load shared data from external app
+            logger.info('Loading shared data', sharedData, 'AddCardModal');
+            setTitle(sharedData.title || '');
+            setLink(sharedData.url || '');
+            setContent(sharedData.text || '');
+            setTags([]);
         } else {
             // Reset form when adding new card
             logger.info('Opening modal for new card', undefined, 'AddCardModal');
@@ -52,7 +61,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setContent('');
             setTags([]);
         }
-    }, [editingCard, isOpen]);
+    }, [editingCard, sharedData, isOpen]);
 
     // Auto-fetch Instagram image when Instagram link is detected
     useEffect(() => {

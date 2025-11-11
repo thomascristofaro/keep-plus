@@ -34,6 +34,23 @@ const App: React.FC = () => {
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [selectionMode, setSelectionMode] = useState<boolean>(false);
     const [wideCardMode, setWideCardMode] = useState<boolean>(false);
+    const [sharedData, setSharedData] = useState<{ title?: string; text?: string; url?: string } | null>(null);
+
+    // Handle Web Share Target - check URL params for shared content
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const title = urlParams.get('title');
+        const text = urlParams.get('text');
+        const url = urlParams.get('url');
+        
+        if (title || text || url) {
+            logger.info('Received shared content', { title, text, url }, 'App');
+            setSharedData({ title: title || undefined, text: text || undefined, url: url || undefined });
+            setShowAddModal(true);
+            // Clean URL params
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, []);
 
     // Handle URL routing - sync URL params with state
     useEffect(() => {
@@ -393,6 +410,7 @@ const App: React.FC = () => {
                 onSave={editingCard ? handleUpdateCard : handleAddCard}
                 onDelete={editingCard ? handleDeleteCard : undefined}
                 editingCard={editingCard}
+                sharedData={sharedData}
             />
         </div>
     );
