@@ -25,7 +25,14 @@ const App: React.FC = () => {
         clearError
     } = useCardStorage();
     
-    const [isDark, setIsDark] = useState<boolean>(true);
+    // Initialize dark mode based on localStorage or system preference
+    const [isDark, setIsDark] = useState<boolean>(() => {
+        const saved = localStorage.getItem('color-scheme');
+        if (saved) {
+            return saved === 'dark';
+        }
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    });
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [activeTag, setActiveTag] = useState<string>('');
     const [showAddModal, setShowAddModal] = useState<boolean>(false);
@@ -93,13 +100,12 @@ const App: React.FC = () => {
         }
     }, [tagName, noteId, cards, activeTag, navigate]);
 
-    // Apply dark mode to document
+    // Apply dark mode to document using data-color-scheme attribute
     useEffect(() => {
-        if (isDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        const scheme = isDark ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-color-scheme', scheme);
+        localStorage.setItem('color-scheme', scheme);
+        logger.trackAction('theme_change', { scheme });
     }, [isDark]);
 
     // Clear storage errors when they're displayed

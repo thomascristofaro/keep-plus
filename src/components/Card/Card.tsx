@@ -49,7 +49,7 @@ const Card: React.FC<CardProps> = ({ card, isSelected = false, onSelect, onEdit 
             return (
                 <div className="relative overflow-hidden bg-gray-100 dark:bg-gray-800 aspect-square">
                     {!imageLoaded && !imageError && (
-                        <div className="absolute inset-0 bg-[linear-gradient(90deg,#f0f0f0_0px,#e0e0e0_40px,#f0f0f0_80px)] dark:bg-[linear-gradient(90deg,#2d3748_0px,#4a5568_40px,#2d3748_80px)] bg-size-[200px] animate-[shimmer_1.5s_infinite]"></div>
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,#f0f0f0_0px,#e0e0e0_40px,#f0f0f0_80px)] dark:bg-[linear-gradient(90deg,#2d3748_0px,#4a5568_40px,#2d3748_80px)] bg-size-[200px] animate-shimmer"></div>
                     )}
                     <img
                         src={card.coverUrl}
@@ -75,7 +75,7 @@ const Card: React.FC<CardProps> = ({ card, isSelected = false, onSelect, onEdit 
 
     return (
         <div 
-            className="inline-block w-full mb-4 break-inside-avoid animate-[fadeIn_0.3s_ease-out]"
+            className="inline-block w-full mb-4 break-inside-avoid animate-fadeIn"
             onClick={handleCardClick}
         >
             <div className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_10px_25px_rgba(0,0,0,0.3)] bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 cursor-pointer overflow-hidden relative">

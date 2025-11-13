@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Configure dark mode to use data-color-scheme attribute */
+@variant dark (&:is([data-color-scheme="dark"] *));
+
 /* Tailwind v4 CSS-first configuration */
 @theme {
   /* Keep brand colors */
@@ -30,6 +33,17 @@
   /* Custom animations */
   --animate-fadeIn: fadeIn 0.3s ease-out;
   --animate-shimmer: shimmer 1.5s infinite;
+}
+
+/* Dark mode support using data-color-scheme attribute */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) {
+    color-scheme: dark;
+  }
+}
+
+[data-color-scheme="dark"] {
+  color-scheme: dark;
 }
 
 /* Keyframe animations - Tailwind can't do these */
