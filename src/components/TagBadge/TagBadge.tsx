@@ -17,7 +17,7 @@ export interface TagBadgeProps {
 const TagBadge: React.FC<TagBadgeProps> = ({ tag, isActive, onClick, showCount = false }) => {
     return (
         <span 
-            className={`tag-badge cursor-pointer transition-all duration-200 ${
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 ${
                 isActive 
                     ? 'ring-2 ring-blue-500 ring-opacity-50' 
                     : 'hover:ring-1 hover:ring-gray-400'

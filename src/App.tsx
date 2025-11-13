@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Card from './components/Card/index.ts';
 import Sidebar from './components/Sidebar/index.ts';
-import AddCardModal from './components/AddCardModal/index.ts';
+import CardModal from './components/CardModal/index.ts';
 import { useCardStorage } from './hooks/useCardStorage.ts';
 import type { Card as CardType } from './types/index.ts';
 import { logger, trackAction } from './services/logger.ts';
@@ -296,7 +296,7 @@ const App: React.FC = () => {
                             {selectionMode && selectedCards.size > 0 && (
                                 <button
                                     onClick={handleDeleteSelected}
-                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors focus-visible flex items-center space-x-2"
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 flex items-center space-x-2"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -307,7 +307,7 @@ const App: React.FC = () => {
                             
                             <button
                                 onClick={() => setWideCardMode(!wideCardMode)}
-                                className={`p-2 rounded-lg font-medium transition-colors focus-visible ${
+                                className={`p-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                                     wideCardMode 
                                         ? 'bg-blue-600 text-white hover:bg-blue-700' 
                                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -326,7 +326,7 @@ const App: React.FC = () => {
                                         setSelectedCards(new Set());
                                     }
                                 }}
-                                className={`p-2 rounded-lg font-medium transition-colors focus-visible ${
+                                className={`p-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                                     selectionMode 
                                         ? 'bg-blue-600 text-white hover:bg-blue-700' 
                                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -343,7 +343,7 @@ const App: React.FC = () => {
                                     setEditingCard(null);
                                     setShowAddModal(true);
                                 }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors focus-visible flex items-center space-x-2"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 flex items-center space-x-2"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -408,7 +408,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Add/Edit Card Modal */}
-            <AddCardModal
+            <CardModal
                 isOpen={showAddModal}
                 onClose={handleCloseModal}
                 onSave={handleSaveCard}

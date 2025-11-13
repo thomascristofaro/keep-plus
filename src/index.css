@@ -2,8 +2,53 @@
 
 /* Tailwind v4 CSS-first configuration */
 @theme {
+  /* Keep brand colors */
   --color-keep-yellow: #fbbc04;
   --color-keep-blue: #4285f4;
   --color-keep-green: #34a853;
   --color-keep-red: #ea4335;
+  
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  
+  /* Custom easings */
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* Border radius values */
+  --radius-sm: 6px;
+  --radius-base: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  
+  /* Font family */
+  --font-family-base: "FKGroteskNeue", "Geist", "Inter", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, monospace;
+    
+  /* Custom animations */
+  --animate-fadeIn: fadeIn 0.3s ease-out;
+  --animate-shimmer: shimmer 1.5s infinite;
+}
+
+/* Keyframe animations - Tailwind can't do these */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
 }

@@ -4,9 +4,9 @@ import { isInstagramUrl, fetchInstagramImageUrl } from '../../utils/instagram.ts
 import { logger, trackAction } from '../../services/logger.ts';
 
 /**
- * Props for the AddCardModal component
+ * Props for the CardModal component
  */
-export interface AddCardModalProps {
+export interface CardModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (card: Partial<Card>) => Promise<Card | null>;
@@ -18,7 +18,7 @@ export interface AddCardModalProps {
 /**
  * Modal component for adding or editing a card
  */
-const AddCardModal: React.FC<AddCardModalProps> = ({ 
+const CardModal: React.FC<CardModalProps> = ({ 
   isOpen, 
   onClose, 
   onSave, 
@@ -41,7 +41,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
         if (!isOpen) return;
         
         if (editingCard) {
-            logger.info('Loading card for editing', { cardId: editingCard.id }, 'AddCardModal');
+            logger.info('Loading card for editing', { cardId: editingCard.id }, 'CardModal');
             setTitle(editingCard.title);
             setCoverUrl(editingCard.coverUrl || '');
             setLink(editingCard.link || '');
@@ -51,7 +51,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setCreatedAt(editingCard.createdAt);
         } else if (sharedData) {
             // Load shared data from external app
-            logger.info('Loading shared data', sharedData, 'AddCardModal');
+            logger.info('Loading shared data', sharedData, 'CardModal');
             setTitle(sharedData.title || '');
             setLink(sharedData.url || '');
             setContent(sharedData.text || '');
@@ -60,7 +60,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
             setCreatedAt(null);
         } else {
             // Reset form when adding new card
-            logger.info('Opening modal for new card', undefined, 'AddCardModal');
+            logger.info('Opening modal for new card', undefined, 'CardModal');
             setTitle('');
             setCoverUrl('');
             setLink('');
@@ -76,16 +76,16 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
         const fetchInstagramImage = async () => {
             if (link && isInstagramUrl(link)) {
                 try {
-                    logger.info('Fetching Instagram image', { link }, 'AddCardModal');
+                    logger.info('Fetching Instagram image', { link }, 'CardModal');
                     const imageUrl = await fetchInstagramImageUrl(link);
                     if (imageUrl) {
                         setCoverUrl(imageUrl);
-                        logger.info('Instagram image fetched successfully', { imageUrl }, 'AddCardModal');
+                        logger.info('Instagram image fetched successfully', { imageUrl }, 'CardModal');
                     } else {
-                        logger.warn('No Instagram image URL returned', { link }, 'AddCardModal');
+                        logger.warn('No Instagram image URL returned', { link }, 'CardModal');
                     }
                 } catch (error) {
-                    logger.error('Failed to fetch Instagram image', error, 'AddCardModal');
+                    logger.error('Failed to fetch Instagram image', error, 'CardModal');
                 }
             }
         };
@@ -106,7 +106,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 content: content.trim() || undefined,
                 tags: tags
             };
-            logger.debug('Auto-saving new card (create)', { title: cardToCreate.title }, 'AddCardModal');
+            logger.debug('Auto-saving new card (create)', { title: cardToCreate.title }, 'CardModal');
             const saved = await onSave(cardToCreate);
             if (saved && typeof saved === 'object' && 'id' in saved && saved.id) {
                 setDbId(saved.id);
@@ -124,7 +124,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
                 createdAt: createdAt || new Date(),
                 updatedAt: new Date()
             };
-            logger.debug('Auto-saving card (update)', { cardId: dbId, title: cardToUpdate.title }, 'AddCardModal');
+            logger.debug('Auto-saving card (update)', { cardId: dbId, title: cardToUpdate.title }, 'CardModal');
             await onSave(cardToUpdate);
         }
     };
@@ -217,7 +217,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
             <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full h-[90vh] flex flex-col">
                 {/* Cover URL with Title Overlay */}
                 <div className="relative shrink-0">
@@ -400,4 +400,4 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
     );
 };
 
-export default AddCardModal;
+export default CardModal;
