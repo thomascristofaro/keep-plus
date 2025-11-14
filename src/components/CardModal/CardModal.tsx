@@ -153,6 +153,22 @@ const CardModal: React.FC<CardModalProps> = ({
         }
     }, [isOpen, onClose]);
 
+    // Handle ESC key to close modal
+    useEffect(() => {
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscKey);
+            return () => {
+                document.removeEventListener('keydown', handleEscKey);
+            };
+        }
+    }, [isOpen, onClose]);
+
     const handleRemoveTag = (tagToRemove: string): void => {
         trackAction('remove_tag', { tag: tagToRemove });
         setTags(tags.filter(tag => tag !== tagToRemove));
