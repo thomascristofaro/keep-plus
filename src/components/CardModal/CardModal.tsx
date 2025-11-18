@@ -238,12 +238,12 @@ const CardModal: React.FC<CardModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/50 md:backdrop-blur-sm flex items-center justify-center md:p-4">
+            <div ref={modalRef} className="bg-white dark:bg-gray-800 md:rounded-lg shadow-xl max-w-4xl w-full h-full md:h-[90vh] flex flex-col">
                 {/* Cover URL with Title Overlay */}
                 <div className="relative shrink-0">
                     {coverUrl ? (
-                        <div className={`relative w-full ${getCoverHeight()} rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group transition-all duration-300`}>
+                        <div className={`relative w-full ${getCoverHeight()} md:rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group transition-all duration-300`}>
                             <img 
                                 src={coverUrl} 
                                 alt="Cover preview" 
@@ -294,7 +294,7 @@ const CardModal: React.FC<CardModalProps> = ({
                             </button>
                         </div>
                     ) : (
-                        <div className={`relative w-full h-42 rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group transition-all duration-300`}>
+                        <div className={`relative w-full h-42 md:rounded-t-lg overflow-hidden bg-gray-100 dark:bg-gray-700 group transition-all duration-300`}>
                             <div className="w-full h-42 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                                 <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -345,7 +345,7 @@ const CardModal: React.FC<CardModalProps> = ({
                 </div>
 
                 {/* Fixed Footer with Link and Tags */}
-                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 space-y-3 rounded-b-lg">
+                <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 space-y-3 md:rounded-b-lg">
                     {/* Link Input */}
                     <div>
                         <input
