@@ -33,6 +33,7 @@ const CardModal: React.FC<CardModalProps> = ({
     const [tags, setTags] = useState<string[]>([]);
     const [dbId, setDbId] = useState<number | null>(null); // Track DB id after first save
     const [createdAt, setCreatedAt] = useState<Date | null>(null);
+    const [shouldAutoSave, setShouldAutoSave] = useState(false); // Trigger for auto-save
     const modalRef = useRef<HTMLDivElement>(null);
 
     // Load card data when editing
@@ -91,7 +92,7 @@ const CardModal: React.FC<CardModalProps> = ({
         };
 
         fetchInstagramImage();
-    }, [link, coverUrl]);
+    }, [link]);
 
     // Auto-save handler - only called after user actions
     const handleAutoSave = async () => {
@@ -129,58 +130,24 @@ const CardModal: React.FC<CardModalProps> = ({
         }
     };
 
-    // Handle click outside to close
+    // Trigger auto-save when state changes (after state has propagated)
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-                // Use setTimeout to ensure we don't interfere with other click handlers
-                setTimeout(() => {
-                    onClose();
-                }, 0);
-            }
-        };
-
-        if (isOpen) {
-            // Add a small delay before attaching the listener to prevent immediate close
-            const timeoutId = setTimeout(() => {
-                document.addEventListener('mousedown', handleClickOutside);
-            }, 100);
-            
-            return () => {
-                clearTimeout(timeoutId);
-                document.removeEventListener('mousedown', handleClickOutside);
-            };
+        if (shouldAutoSave && isOpen) {
+            handleAutoSave();
+            setShouldAutoSave(false);
         }
-    }, [isOpen, onClose]);
-
-    // Handle ESC key to close modal
-    useEffect(() => {
-        const handleEscKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                onClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscKey);
-            return () => {
-                document.removeEventListener('keydown', handleEscKey);
-            };
-        }
-    }, [isOpen, onClose]);
+    }, [shouldAutoSave, coverUrl, link, content, tags, isOpen]);
 
     const handleRemoveTag = (tagToRemove: string): void => {
         trackAction('remove_tag', { tag: tagToRemove });
         setTags(tags.filter(tag => tag !== tagToRemove));
-        // Trigger autosave after tag removal
-        setTimeout(handleAutoSave, 0);
+        setShouldAutoSave(true);
     };
 
     const handleAddTag = (newTag: string): void => {
         if (newTag && newTag.trim() && !tags.includes(newTag.trim())) {
             setTags([...tags, newTag.trim()]);
-            // Trigger autosave after tag addition
-            setTimeout(handleAutoSave, 0);
+            setShouldAutoSave(true);
         }
     };
 
@@ -189,13 +156,14 @@ const CardModal: React.FC<CardModalProps> = ({
     };
 
     const handleTitleBlur = (): void => {
-        setTimeout(handleAutoSave, 0);
+        setShouldAutoSave(true);
     };
 
     const handleCoverUrlChange = (newUrl: string): void => {
         setCoverUrl(newUrl);
-        if (!title.trim()) return;
-        setTimeout(handleAutoSave, 0);
+        if (title.trim()) {
+            setShouldAutoSave(true);
+        }
     };
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
@@ -203,7 +171,7 @@ const CardModal: React.FC<CardModalProps> = ({
     };
 
     const handleContentBlur = (): void => {
-        setTimeout(handleAutoSave, 0);
+        setShouldAutoSave(true);
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -211,7 +179,7 @@ const CardModal: React.FC<CardModalProps> = ({
     };
 
     const handleLinkBlur = (): void => {
-        setTimeout(handleAutoSave, 0);
+        setShouldAutoSave(true);
     };
 
     const handleDelete = (): void => {
