@@ -138,6 +138,43 @@ const CardModal: React.FC<CardModalProps> = ({
         }
     }, [shouldAutoSave, coverUrl, link, content, tags, isOpen]);
 
+    // Handle click outside to close
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            // Add a small delay before attaching the listener to prevent immediate close
+            const timeoutId = setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+            }, 100);
+            
+            return () => {
+                clearTimeout(timeoutId);
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
+        }
+    }, [isOpen, onClose]);
+
+    // Handle ESC key to close modal
+    useEffect(() => {
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscKey);
+            return () => {
+                document.removeEventListener('keydown', handleEscKey);
+            };
+        }
+    }, [isOpen, onClose]);
+
     const handleRemoveTag = (tagToRemove: string): void => {
         trackAction('remove_tag', { tag: tagToRemove });
         setTags(tags.filter(tag => tag !== tagToRemove));
