@@ -1,2 +1,1 @@
 # Development TODO
-- implement the supabase integration, for the app to integrate in storage-factory.ts, like indexeddb-storage.ts. I want something for doing also migration (creation) of the table (at the moment there is only one, maybe in the future more)

@@ -1,11 +1,11 @@
 import type { ICardStorage, StorageConfig } from './types.ts';
 import { IndexedDBCardStorage } from './indexeddb-storage.ts';
+import { SupabaseCardStorage } from './supabase-storage.ts';
 
 /**
  * Future storage implementations placeholder
  */
 // import { FirebaseCardStorage } from './firebase-storage.ts';
-// import { SupabaseCardStorage } from './supabase-storage.ts';
 // import { LocalStorageCardStorage } from './localstorage-storage.ts';
 
 /**
@@ -59,12 +59,10 @@ export class CardStorageFactory {
                 throw new Error('Firebase provider not yet implemented');
                 
             case 'supabase':
-                // TODO: Implement SupabaseCardStorage
-                // return new SupabaseCardStorage({
-                //     url: options.url!,
-                //     anonKey: options.anonKey!
-                // });
-                throw new Error('Supabase provider not yet implemented');
+                return new SupabaseCardStorage(
+                    options.url!,
+                    options.anonKey!
+                );
                 
             case 'memory':
                 // TODO: Implement in-memory storage for testing
@@ -116,18 +114,6 @@ export class CardStorageFactory {
 }
 
 /**
- * Default storage instance - can be easily swapped by changing the provider
- */
-export const cardStorage = CardStorageFactory.getInstance({
-    provider: 'indexeddb',
-    options: {
-        dbName: 'KeepPlusDB',
-        dbVersion: 1,
-        enableLogging: import.meta.env.DEV
-    }
-});
-
-/**
  * Configuration-based storage creation
  * 
  * Usage examples:
@@ -138,12 +124,12 @@ export const cardStorage = CardStorageFactory.getInstance({
  *   options: { dbName: 'KeepPlusDev' }
  * });
  * 
- * // Production - use Firebase
+ * // Production - use Supabase
  * const storage = createCardStorage({
- *   provider: 'firebase',
+ *   provider: 'supabase',
  *   options: {
- *     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
- *     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID
+ *     url: import.meta.env.VITE_SUPABASE_URL,
+ *     anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY
  *   }
  * });
  */
@@ -153,37 +139,45 @@ export function createCardStorage(config: StorageConfig): ICardStorage {
 
 /**
  * Environment-based storage configuration
+ * Automatically selects the best storage provider based on available credentials
  */
 export function getDefaultStorage(): ICardStorage {
-    // You can customize this logic based on your deployment needs
     const isDevelopment = import.meta.env.DEV;
-    const isProduction = import.meta.env.PROD;
     
+    // Check for Supabase credentials first (works in both dev and prod)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (supabaseUrl && supabaseKey) {
+        return CardStorageFactory.getSupabaseStorage(supabaseUrl, supabaseKey);
+    }
+    
+    // Check for Firebase credentials
+    const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const firebaseProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+    
+    if (firebaseApiKey && firebaseProjectId) {
+        return CardStorageFactory.getFirebaseStorage(firebaseApiKey, firebaseProjectId);
+    }
+    
+    // Fallback to IndexedDB
     if (isDevelopment) {
-        // Use IndexedDB for development
         return CardStorageFactory.getIndexedDBStorage('KeepPlusDev');
     }
     
-    if (isProduction) {
-        // Check for cloud provider credentials
-        const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-        const firebaseProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-        
-        if (firebaseApiKey && firebaseProjectId) {
-            return CardStorageFactory.getFirebaseStorage(firebaseApiKey, firebaseProjectId);
-        }
-        
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        
-        if (supabaseUrl && supabaseKey) {
-            return CardStorageFactory.getSupabaseStorage(supabaseUrl, supabaseKey);
-        }
-        
-        // Fallback to IndexedDB in production
-        return CardStorageFactory.getIndexedDBStorage();
-    }
-    
-    // Default fallback
     return CardStorageFactory.getIndexedDBStorage();
 }
+
+/**
+ * Default storage instance - automatically selects provider based on environment
+ * 
+ * Selection priority:
+ * 1. Supabase (if VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set)
+ * 2. Firebase (if VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set)
+ * 3. IndexedDB (fallback)
+ * 
+ * To use Supabase, add to your .env file:
+ *   VITE_SUPABASE_URL=https://your-project.supabase.co
+ *   VITE_SUPABASE_ANON_KEY=your-anon-key
+ */
+export const cardStorage = getDefaultStorage();
